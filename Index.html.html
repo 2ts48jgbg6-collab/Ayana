@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="Ayana"/>
+<meta name="theme-color" content="#FFF0F5"/>
+<title>Ayana</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+
+<script>
+// Generate apple-touch-icon via canvas and inject it
+window.addEventListener('DOMContentLoaded', () => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 180; canvas.height = 180;
+  const ctx = canvas.getContext('2d');
+  // Background
+  const grad = ctx.createLinearGradient(0,0,180,180);
+  grad.addColorStop(0, '#FFB6C9');
+  grad.addColorStop(1, '#E8638A');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.roundRect(0,0,180,180,36);
+  ctx.fill();
+  // Baby emoji
+  ctx.font = '100px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🍼', 90, 95);
+  const link = document.createElement('link');
+  link.rel = 'apple-touch-icon';
+  link.href = canvas.toDataURL('image/png');
+  document.head.appendChild(link);
+  // Also set favicon
+  const fav = document.createElement('link');
+  fav.rel = 'icon';
+  fav.href = canvas.toDataURL('image/png');
+  document.head.appendChild(fav);
+});
+</script>
+
+<style>
+:root {
+  --cream: #FFF0F5;
+  --gold: #E8638A;
+  --green: #F4A0BC;
+  --purple: #C97BA8;
+  --pink: #E8638A;
+  --blue: #F0839F;
+  --yellow: #F7BDCE;
+  --text: #3D1A26;
+  --muted: #B07A90;
+  --border: #F5D0DE;
+  --white: #ffffff;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: var(--cream); color: var(--text); font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
+h1, h2, h3 { font-family: 'Playfair Display', serif; }
+
+.screen { display: none; flex-direction: column; height: 100vh; height: 100dvh; }
+.screen.active { display: flex; }
+
+/* HEADER */
+.header {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 20px 0;
+  flex-shrink: 0;
+  position: sticky; top: 0; z-index: 20;
+}
+.header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+.baby-name { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; }
+.baby-subtitle { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.today-stats { text-align: right; font-size: 13px; color: #666; font-weight: 500; }
+.today-label { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+.tabs { display: flex; gap: 24px; }
+.tab { background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; color: var(--muted); padding: 10px 0 8px; border-bottom: 2px solid transparent; transition: all 0.2s; }
+.tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+/* SCROLLABLE BODY */
+.body { flex: 1; overflow-y: auto; padding: 20px 16px; padding-bottom: calc(24px + var(--safe-bottom)); -webkit-overflow-scrolling: touch; }
+
+/* CARDS */
+.card { background: var(--white); border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.055); }
+
+/* CATEGORY GRID */
+.grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.cat-btn {
+  padding: 18px 8px; text-align: center; border-radius: 16px;
+  background: var(--white); border: 2px solid transparent;
+  cursor: pointer; transition: all 0.15s; box-shadow: 0 2px 10px rgba(0,0,0,0.055);
+}
+.cat-btn:active { transform: scale(0.95); }
+.cat-emoji { font-size: 28px; margin-bottom: 6px; }
+.cat-label { font-size: 12px; font-weight: 500; color: #555; }
+
+/* SECTION LABEL */
+.section-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+
+/* LOG FORM */
+.form-card { padding: 24px; }
+.form-header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+.form-emoji { font-size: 36px; }
+.form-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 600; }
+.form-time { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.field { margin-bottom: 18px; }
+.field label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; display: block; margin-bottom: 6px; }
+.field input, .field select {
+  width: 100%; padding: 11px 14px; border-radius: 10px;
+  border: 1.5px solid #EEE; font-size: 15px; font-family: 'DM Sans', sans-serif;
+  background: var(--white); color: var(--text); outline: none;
+  transition: border-color 0.15s;
+}
+.field input:focus, .field select:focus { border-color: var(--gold); }
+.form-actions { display: flex; gap: 10px; margin-top: 24px; }
+.btn-cancel { flex: 1; padding: 13px; border-radius: 12px; background: #F5F5F5; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 15px; color: #888; transition: all 0.15s; }
+.btn-cancel:active { transform: scale(0.97); }
+.btn-save { flex: 2; padding: 13px; border-radius: 12px; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; color: white; transition: all 0.15s; }
+.btn-save:active { transform: scale(0.97); }
+
+/* RECENT LOG ITEMS */
+.log-item { padding: 13px 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; }
+.log-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.log-info { flex: 1; min-width: 0; }
+.log-name { font-size: 14px; font-weight: 500; color: #333; }
+.log-summary { font-size: 12px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.log-meta { text-align: right; flex-shrink: 0; }
+.log-time { font-size: 12px; color: #bbb; }
+.log-delete { background: none; border: none; cursor: pointer; font-size: 15px; color: #ddd; padding: 2px; margin-top: 4px; display: block; margin-left: auto; transition: color 0.15s; }
+.log-delete:active { color: #e74c3c; }
+
+/* HISTORY FILTERS */
+.filters { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 20px; }
+.filters::-webkit-scrollbar { display: none; }
+.filter-btn { padding: 6px 14px; border-radius: 20px; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 12px; white-space: nowrap; transition: all 0.15s; }
+.filter-btn:active { transform: scale(0.95); }
+
+/* DATE GROUP */
+.date-group { margin-bottom: 24px; }
+.date-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+
+/* EMPTY STATE */
+.empty { text-align: center; padding: 60px 20px; color: #ccc; }
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+/* NAME EDIT */
+.name-edit { display: flex; gap: 8px; align-items: center; }
+.name-input { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; border: none; border-bottom: 2px solid var(--gold); background: transparent; width: 160px; color: var(--text); outline: none; }
+.name-save { background: var(--gold); color: white; border: none; border-radius: 8px; padding: 4px 12px; font-size: 13px; font-family: 'DM Sans', sans-serif; cursor: pointer; }
+.edit-pencil { background: none; border: none; cursor: pointer; font-size: 14px; padding: 2px; }
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: calc(20px + var(--safe-bottom)); left: 50%; transform: translateX(-50%) translateY(80px);
+  background: #2D2D2D; color: white; padding: 10px 20px; border-radius: 20px;
+  font-size: 13px; font-family: 'DM Sans', sans-serif; z-index: 100;
+  transition: transform 0.3s ease; pointer-events: none;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* Install banner */
+.install-banner {
+  background: linear-gradient(135deg, #FFB6C9, #E8638A);
+  padding: 12px 16px; display: flex; align-items: center; gap: 10px;
+  font-size: 13px; color: #6B1A33;
+}
+.install-banner-close { margin-left: auto; background: none; border: none; cursor: pointer; font-size: 16px; color: #6B1A33; }
+
+@keyframes fadeIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform:translateY(0); } }
+.animate-in { animation: fadeIn 0.25s ease forwards; }
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast">✓ Logged!</div>
+
+<!-- MAIN SCREEN -->
+<div class="screen active" id="mainScreen">
+
+  <!-- Install hint (shown once) -->
+  <div class="install-banner" id="installBanner" style="display:none">
+    <span>📲</span>
+    <span>Tap <strong>Share → Add to Home Screen</strong> to install as an app</span>
+    <button class="install-banner-close" onclick="dismissBanner()">✕</button>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div id="nameDisplay">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="baby-name" id="babyNameText">Baby 🌟</div>
+            <button class="edit-pencil" onclick="startEditName()">✏️</button>
+          </div>
+        </div>
+        <div id="nameEdit" style="display:none">
+          <div class="name-edit">
+            <input class="name-input" id="nameInput" placeholder="Baby's name" maxlength="20"/>
+            <button class="name-save" onclick="saveName()">Save</button>
+          </div>
+        </div>
+        <div class="baby-subtitle">Daily Tracker</div>
+      </div>
+      <div>
+        <div class="today-label">Today</div>
+        <div class="today-stats" id="todayStats">🍼 0 · 👶 0 · 😴 0m</div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('log', this)">Log</button>
+      <button class="tab" onclick="switchTab('history', this)">History</button>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="body">
+    <!-- LOG TAB -->
+    <div id="tabLog">
+      <!-- Category grid -->
+      <div id="catGrid">
+        <div class="section-label">Log an event</div>
+        <div class="grid" id="categoryGrid"></div>
+        <div id="recentSection" style="margin-top:28px;display:none">
+          <div class="section-label">Recent</div>
+          <div id="recentList"></div>
+        </div>
+      </div>
+      <!-- Form -->
+      <div id="logForm" style="display:none">
+        <div class="card form-card animate-in">
+          <div class="form-header">
+            <div class="form-emoji" id="formEmoji"></div>
+            <div>
+              <div class="form-title" id="formTitle"></div>
+              <div class="form-time" id="formTime"></div>
+            </div>
+          </div>
+          <div id="formFields"></div>
+          <div class="form-actions">
+            <button class="btn-cancel" onclick="cancelForm()">Cancel</button>
+            <button class="btn-save" id="btnSave" onclick="saveLog()">Save Log ✓</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY TAB -->
+    <div id="tabHistory" style="display:none">
+      <div class="filters" id="filterBtns"></div>
+      <div id="historyList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const CATEGORIES = {
+  feeding: {
+    label: 'Feeding', emoji: '🍼', color: '#E8638A',
+    fields: [
+      { name:'type', label:'Type', type:'select', options:['Breast L','Breast R','Bottle','Formula','Solid'] },
+      { name:'amount', label:'Amount (oz / min)', type:'number', placeholder:'e.g. 4' },
+      { name:'notes', label:'Notes', type:'text', placeholder:'Optional' }
+    ]
+  },
+  diaper: {
+    label: 'Diaper', emoji: '👶', color: '#F4A0BC',
+    fields: [
+      { name:'type', label:'Type', type:'select', options:['Wet','Dirty','Both','Dry'] },
+      { name:'color', label:'Color', type:'select', options:['Yellow','Green','Brown','Black','Other'] },
+      { name:'notes', label:'Notes', type:'text', placeholder:'Optional' }
+    ]
+  },
+  sleep: {
+    label: 'Sleep', emoji: '😴', color: '#C97BA8',
+    fields: [
+      { name:'duration', label:'Duration (min)', type:'number', placeholder:'e.g. 90' },
+      { name:'location', label:'Location', type:'select', options:['Crib','Bassinet','Contact','Stroller','Car'] },
+      { name:'notes', label:'Notes', type:'text', placeholder:'Optional' }
+    ]
+  },
+  weight: {
+    label: 'Weight', emoji: '⚖️', color: '#F06090',
+    fields: [
+      { name:'value', label:'Weight (lbs)', type:'number', placeholder:'e.g. 8.5' },
+      { name:'notes', label:'Notes', type:'text', placeholder:'Optional' }
+    ]
+  },
+  medicine: {
+    label: 'Medicine', emoji: '💊', color: '#F0839F',
+    fields: [
+      { name:'name', label:'Medicine', type:'text', placeholder:'e.g. Tylenol' },
+      { name:'dose', label:'Dose (ml)', type:'number', placeholder:'e.g. 2.5' },
+      { name:'notes', label:'Notes', type:'text', placeholder:'Optional' }
+    ]
+  },
+  mood: {
+    label: 'Mood', emoji: '😊', color: '#F7BDCE',
+    fields: [
+      { name:'state', label:'State', type:'select', options:['Happy','Fussy','Crying','Calm','Active'] },
+      { name:'notes', label:'Notes', type:'text', placeholder:'Optional' }
+    ]
+  }
+};
+
+let logs = JSON.parse(localStorage.getItem('baby-logs') || '[]');
+let babyName = localStorage.getItem('baby-name') || 'Ayana';
+let activeCategory = null;
+let formData = {};
+let filterCat = 'all';
+let currentTab = 'log';
+
+function save() { localStorage.setItem('baby-logs', JSON.stringify(logs)); }
+
+function formatTime(iso) {
+  return new Date(iso).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+}
+function formatDate(iso) {
+  const d = new Date(iso), t = new Date(), y = new Date();
+  y.setDate(t.getDate()-1);
+  if (d.toDateString()===t.toDateString()) return 'Today';
+  if (d.toDateString()===y.toDateString()) return 'Yesterday';
+  return d.toLocaleDateString([], {month:'short', day:'numeric'});
+}
+function getSummary(log) {
+  const parts = [];
+  const c = log.category;
+  if (c==='feeding') { if(log.type) parts.push(log.type); if(log.amount) parts.push(log.amount+' oz'); }
+  else if (c==='diaper') { if(log.type) parts.push(log.type); if(log.color) parts.push(log.color); }
+  else if (c==='sleep') { if(log.duration) parts.push(log.duration+' min'); if(log.location) parts.push(log.location); }
+  else if (c==='weight') { if(log.value) parts.push(log.value+' lbs'); }
+  else if (c==='medicine') { if(log.name) parts.push(log.name); if(log.dose) parts.push(log.dose+' ml'); }
+  else if (c==='mood') { if(log.state) parts.push(log.state); }
+  if (log.notes) parts.push('— '+log.notes);
+  return parts.join(' · ') || '—';
+}
+
+// INIT NAME
+function initName() {
+  document.getElementById('babyNameText').textContent = (babyName || 'Ayana') + ' 🌟';
+}
+function startEditName() {
+  document.getElementById('nameDisplay').style.display = 'none';
+  document.getElementById('nameEdit').style.display = 'block';
+  document.getElementById('nameInput').value = babyName;
+  document.getElementById('nameInput').focus();
+}
+function saveName() {
+  babyName = document.getElementById('nameInput').value.trim() || 'Ayana';
+  localStorage.setItem('baby-name', babyName);
+  document.getElementById('nameDisplay').style.display = 'block';
+  document.getElementById('nameEdit').style.display = 'none';
+  initName();
+}
+document.getElementById('nameInput').addEventListener('keydown', e => { if(e.key==='Enter') saveName(); });
+
+// STATS
+function updateStats() {
+  const today = logs.filter(l => formatDate(l.timestamp) === 'Today');
+  const f = today.filter(l => l.category==='feeding').length;
+  const d = today.filter(l => l.category==='diaper').length;
+  const s = today.filter(l => l.category==='sleep').reduce((a,b)=>a+(Number(b.duration)||0),0);
+  document.getElementById('todayStats').textContent = `🍼 ${f} · 👶 ${d} · 😴 ${s}m`;
+}
+
+// TABS
+function switchTab(tab, el) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tabLog').style.display = tab==='log' ? 'block' : 'none';
+  document.getElementById('tabHistory').style.display = tab==='history' ? 'block' : 'none';
+  if (tab==='history') renderHistory();
+  if (tab==='log') { cancelForm(); renderRecent(); }
+}
+
+// CATEGORY GRID
+function renderGrid() {
+  const grid = document.getElementById('categoryGrid');
+  grid.innerHTML = Object.entries(CATEGORIES).map(([key, cat]) => `
+    <button class="cat-btn" onclick="openForm('${key}')"
+      onmouseenter="this.style.borderColor='${cat.color}'"
+      onmouseleave="this.style.borderColor='transparent'">
+      <div class="cat-emoji">${cat.emoji}</div>
+      <div class="cat-label">${cat.label}</div>
+    </button>
+  `).join('');
+}
+
+// RECENT
+function renderRecent() {
+  const sec = document.getElementById('recentSection');
+  const list = document.getElementById('recentList');
+  if (logs.length === 0) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  list.innerHTML = logs.slice(0,5).map(log => {
+    const cat = CATEGORIES[log.category];
+    return `<div class="card log-item">
+      <div class="log-icon" style="background:${cat.color}22">${cat.emoji}</div>
+      <div class="log-info">
+        <div class="log-name">${cat.label}</div>
+        <div class="log-summary">${getSummary(log)}</div>
+      </div>
+      <div class="log-meta">
+        <div class="log-time">${formatTime(log.timestamp)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// FORM
+function openForm(catKey) {
+  activeCategory = catKey;
+  formData = {};
+  const cat = CATEGORIES[catKey];
+  document.getElementById('catGrid').style.display = 'none';
+  document.getElementById('logForm').style.display = 'block';
+  document.getElementById('formEmoji').textContent = cat.emoji;
+  document.getElementById('formTitle').textContent = 'Log ' + cat.label;
+  document.getElementById('formTime').textContent = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('btnSave').style.background = cat.color;
+  const fields = document.getElementById('formFields');
+  fields.innerHTML = cat.fields.map(f => `
+    <div class="field">
+      <label>${f.label}</label>
+      ${f.type==='select'
+        ? `<select id="field_${f.name}" onchange="formData['${f.name}']=this.value">
+            <option value="">Select...</option>
+            ${f.options.map(o=>`<option>${o}</option>`).join('')}
+           </select>`
+        : `<input type="${f.type}" id="field_${f.name}" placeholder="${f.placeholder||''}"
+             oninput="formData['${f.name}']=this.value"/>`
+      }
+    </div>
+  `).join('');
+  // focus first field
+  setTimeout(() => { const first = fields.querySelector('input,select'); if(first) first.focus(); }, 100);
+}
+
+function cancelForm() {
+  activeCategory = null;
+  formData = {};
+  document.getElementById('catGrid').style.display = 'block';
+  document.getElementById('logForm').style.display = 'none';
+}
+
+function saveLog() {
+  const entry = { id: Date.now(), category: activeCategory, timestamp: new Date().toISOString(), ...formData };
+  logs.unshift(entry);
+  save();
+  updateStats();
+  cancelForm();
+  renderRecent();
+  showToast('✓ ' + CATEGORIES[activeCategory].label + ' logged!');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// HISTORY
+function renderHistory() {
+  // Filter buttons
+  const fb = document.getElementById('filterBtns');
+  const allActive = filterCat==='all';
+  fb.innerHTML = `<button class="filter-btn" onclick="setFilter('all')"
+    style="background:${allActive?'#2D2D2D':'#F0EBE3'};color:${allActive?'white':'#666'}">All</button>` +
+    Object.entries(CATEGORIES).map(([key,cat])=>{
+      const active = filterCat===key;
+      return `<button class="filter-btn" onclick="setFilter('${key}')"
+        style="background:${active?cat.color:'#F0EBE3'};color:${active?'white':'#666'}">${cat.emoji} ${cat.label}</button>`;
+    }).join('');
+
+  const filtered = filterCat==='all' ? logs : logs.filter(l=>l.category===filterCat);
+  const sorted = [...filtered].sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+  const groups = {};
+  sorted.forEach(log => {
+    const key = formatDate(log.timestamp);
+    if (!groups[key]) groups[key]=[];
+    groups[key].push(log);
+  });
+
+  const list = document.getElementById('historyList');
+  if (Object.keys(groups).length===0) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><p>No logs yet</p></div>`;
+    return;
+  }
+  list.innerHTML = Object.entries(groups).map(([date, entries]) => `
+    <div class="date-group">
+      <div class="date-label">${date}</div>
+      ${entries.map(log => {
+        const cat = CATEGORIES[log.category];
+        return `<div class="card log-item">
+          <div class="log-icon" style="background:${cat.color}22">${cat.emoji}</div>
+          <div class="log-info">
+            <div class="log-name">${cat.label}</div>
+            <div class="log-summary">${getSummary(log)}</div>
+          </div>
+          <div class="log-meta">
+            <div class="log-time">${formatTime(log.timestamp)}</div>
+            <button class="log-delete" onclick="deleteLog(${log.id})">🗑</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  `).join('');
+}
+
+function setFilter(cat) {
+  filterCat = cat;
+  renderHistory();
+}
+
+function deleteLog(id) {
+  logs = logs.filter(l=>l.id!==id);
+  save();
+  updateStats();
+  renderHistory();
+  renderRecent();
+}
+
+// INSTALL BANNER
+function showInstallBanner() {
+  if (!localStorage.getItem('banner-dismissed') && !window.navigator.standalone) {
+    document.getElementById('installBanner').style.display = 'flex';
+  }
+}
+function dismissBanner() {
+  localStorage.setItem('banner-dismissed','1');
+  document.getElementById('installBanner').style.display = 'none';
+}
+
+// INIT
+initName();
+renderGrid();
+renderRecent();
+updateStats();
+showInstallBanner();
+</script>
+</body>
+</html>
